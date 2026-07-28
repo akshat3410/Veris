@@ -137,7 +137,7 @@ stellar contract deploy \
   --network testnet
 ```
 
-##- **Smart Contract Adress **: `CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT`
+##  **Smart Contract Adress **: `CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT`
 
 ---
 

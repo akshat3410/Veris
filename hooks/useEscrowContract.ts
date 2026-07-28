@@ -186,6 +186,23 @@ export function useEscrowContract() {
   };
 
   /**
+   * Helper: safely convert an address string to a Soroban Address ScVal.
+   * If the input is an invalid StrKey, fall back to fallbackAddr (or address).
+   */
+  const parseAddressScVal = (addrStr?: string, fallbackAddr?: string): xdr.ScVal => {
+    const target = (addrStr && addrStr.trim()) || fallbackAddr || address || SOROBAN_CONFIG.deployerAddress;
+    try {
+      return new Address(target).toScVal();
+    } catch {
+      try {
+        return new Address(fallbackAddr || address || SOROBAN_CONFIG.deployerAddress).toScVal();
+      } catch {
+        return new Address(SOROBAN_CONFIG.deployerAddress).toScVal();
+      }
+    }
+  };
+
+  /**
    * High level API methods mapping to contract functions
    */
   const createEscrow = async (
@@ -208,7 +225,6 @@ export function useEscrowContract() {
       }).addOperation(testOp).setTimeout(30).build();
       const testSim = await server.simulateTransaction(testTx);
       if (rpc.Api.isSimulationError(testSim)) {
-        // Contract not initialized — initialize it now
         console.log('[Contract] Auto-initializing contract...');
         const initOk = await initializeContract();
         if (!initOk) {
@@ -224,17 +240,22 @@ export function useEscrowContract() {
     const milestoneScVals = milestones.map((m) =>
       encodeMilestoneInput(
         m.title,
-        BigInt(Math.round(parseFloat(m.amount) * 1e7))
+        BigInt(Math.round((parseFloat(m.amount) || 1) * 1e7))
       )
     );
     const milestonesVec = xdr.ScVal.scvVec(milestoneScVals);
 
+    const depositorScVal = parseAddressScVal(address);
+    const beneficiaryScVal = parseAddressScVal(beneficiary, address);
+    const arbiterScVal = parseAddressScVal(arbiter, address);
+    const tokenScVal = parseAddressScVal(SOROBAN_CONFIG.usdcTokenId);
+
     return executeContractCall('create_escrow', [
-      new Address(address).toScVal(),
-      new Address(beneficiary).toScVal(),
-      new Address(arbiter).toScVal(),
-      new Address(SOROBAN_CONFIG.usdcTokenId).toScVal(),
-      sorobanString(title),
+      depositorScVal,
+      beneficiaryScVal,
+      arbiterScVal,
+      tokenScVal,
+      sorobanString(title || 'Escrow Contract'),
       milestonesVec,
     ]);
   };

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useUIStore } from '@/stores/useUIStore';
 import { useEscrowContract } from '@/hooks/useEscrowContract';
 import { TxModal } from '@/components/common/TxModal';
-import { AlertTriangle } from 'lucide-react';
+import { WarningOctagon, X } from '@phosphor-icons/react';
 
 export function DisputeModal() {
   const { activeModal, selectedEscrowId, selectedMilestoneIndex, closeModal } = useUIStore();
@@ -31,49 +31,47 @@ export function DisputeModal() {
       <TxModal txState={txState} onClose={resetTx} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-        <div className="w-full max-w-md p-6 rounded-2xl bg-stellar-surface border border-rose-500/40 shadow-lg shadow-rose-950/50 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="w-full max-w-md p-7 rounded-2xl bg-[#121216] border border-rose-500/30 shadow-2xl space-y-6">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400">
-                <AlertTriangle className="w-5 h-5" />
+              <div className="p-2.5 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                <WarningOctagon size={20} weight="duotone" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg text-white">Open Milestone Dispute</h3>
-                <p className="text-xs text-gray-400 font-mono">
+                <h3 className="font-bold text-lg text-white font-bitcoa">Open Milestone Dispute</h3>
+                <p className="text-xs text-zinc-400 font-mono">
                   Escrow #{selectedEscrowId} — Milestone #{selectedMilestoneIndex + 1}
                 </p>
               </div>
             </div>
-            <button onClick={closeModal} className="text-gray-400 hover:text-white font-bold">
-              ✕
+            <button onClick={closeModal} className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
+              <X size={18} weight="bold" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-mono text-gray-300 mb-1.5">
-                Dispute Reason / Claim Proof (IPFS CID)
+              <label className="block text-xs font-mono font-bold text-zinc-400 mb-1.5 uppercase">
+                Dispute Justification (IPFS CID or Memo)
               </label>
               <textarea
-                required
-                rows={3}
-                placeholder="Describe the milestone specification mismatch or provide IPFS link to evidence..."
                 value={reasonCid}
                 onChange={(e) => setReasonCid(e.target.value)}
-                className="w-full p-3 rounded-xl bg-stellar-obsidian border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-rose-500"
+                placeholder="Describe reason for dispute or provide IPFS CID of evidence..."
+                required
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl bg-[#1A1A22] border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 font-mono text-xs transition-colors"
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
-              ⚠️ Opening a dispute will lock this milestone until resolved by the designated Arbiter on Soroban ledger.
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={closeModal} className="btn-purple-ghost px-5 py-2 text-xs">
+                Cancel
+              </button>
+              <button type="submit" className="px-6 py-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-sm">
+                Submit Dispute ↗
+              </button>
             </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-red-700 hover:to-rose-600 text-white font-bold text-sm transition-all"
-            >
-              Trigger Dispute On-Chain
-            </button>
           </form>
         </div>
       </div>

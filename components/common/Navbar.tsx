@@ -1,89 +1,150 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWallet } from '@/hooks/useWallet';
 import { useUIStore } from '@/stores/useUIStore';
 import { shortenAddress } from '@/lib/utils';
-import { Wallet, Sun, Moon, Shield, Sparkles, Activity } from 'lucide-react';
+import { LockKey, PlugsConnected, Lightning } from '@phosphor-icons/react';
 
 export function Navbar() {
-  const { address, isConnected, isConnecting, connect, disconnect } = useWallet();
-  const { theme, toggleTheme, openModal } = useUIStore();
+  const { address, isConnected, isConnecting, disconnect } = useWallet();
+  const { openModal } = useUIStore();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-stellar-obsidian/70 border-b border-stellar-violet/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        height: '68px',
+        display: 'flex',
+        alignItems: 'center',
+        background: scrolled ? 'rgba(9, 9, 11, 0.92)' : 'rgba(9, 9, 11, 0.4)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: scrolled ? '1px solid rgba(168, 85, 247, 0.25)' : '1px solid transparent',
+        transition: 'all 0.3s ease',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '1240px',
+          margin: '0 auto',
+          padding: '0 32px',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         {/* Brand Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-stellar-violet to-stellar-cyan p-0.5 shadow-glow-violet">
-            <div className="w-full h-full bg-stellar-obsidian rounded-[10px] flex items-center justify-center">
-              <Shield className="w-5 h-5 text-stellar-cyan" />
-            </div>
+        <a
+          href="#"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            textDecoration: 'none',
+          }}
+        >
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '10px',
+              background: '#A855F7',
+              display: 'grid',
+              placeItems: 'center',
+              boxShadow: '0 0 16px rgba(168, 85, 247, 0.4)',
+            }}
+          >
+            <LockKey size={18} weight="bold" color="#09090B" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-stellar-cyan">
-                ESCROWVAULT
-              </span>
-              <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-full bg-stellar-violet/20 text-stellar-violet border border-stellar-violet/30">
-                SOROBAN
-              </span>
-            </div>
-            <p className="text-xs text-gray-400 font-mono">Milestone Execution Engine</p>
-          </div>
-        </div>
+          <span
+            style={{
+              fontFamily: "'Chakra Petch', 'Space Grotesk', sans-serif",
+              fontWeight: 800,
+              fontSize: '20px',
+              letterSpacing: '-0.02em',
+              color: '#FAFAFA',
+            }}
+          >
+            EscrowVault
+          </span>
+        </a>
 
-        {/* Center Nav Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-          <a href="#dashboard" className="hover:text-stellar-cyan transition-colors flex items-center gap-1.5">
-            <Activity className="w-4 h-4 text-stellar-violet" />
-            Dashboard
-          </a>
-          <a href="#escrows" className="hover:text-stellar-cyan transition-colors">
-            Active Escrows
-          </a>
-          <a href="#telemetry" className="hover:text-stellar-cyan transition-colors flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-stellar-cyan" />
-            Contract Telemetry
-          </a>
+        {/* Minimal Navigation */}
+        <nav style={{ display: 'flex', gap: '32px' }}>
+          {[
+            { href: '#hero', label: 'Overview' },
+            { href: '#how', label: 'How it works' },
+            { href: '#architecture', label: 'Architecture' },
+            { href: '#dashboard', label: 'Escrow Engine' },
+          ].map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#D4D4D8',
+                textDecoration: 'none',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#FACC15')}
+              onMouseLeave={(e) => ((e.target as HTMLElement).style.color = '#D4D4D8')}
+            >
+              {item.label}
+            </a>
+          ))}
         </nav>
 
-        {/* Right Actions & Wallet */}
-        <div className="flex items-center gap-3">
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-stellar-card border border-white/10 hover:border-stellar-violet/50 text-gray-300 hover:text-white transition-all"
-            title="Toggle Light/Dark Theme"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-stellar-amber" /> : <Moon className="w-4 h-4 text-stellar-violet" />}
-          </button>
-
-          {/* Network Indicator Pill */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Stellar Testnet
+        {/* Connect Action */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: '#A1A1AA' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
+            Testnet
           </div>
 
-          {/* Wallet Action Button */}
           {isConnected && address ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={disconnect}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-stellar-card border border-stellar-violet/40 hover:border-stellar-rose/50 text-sm font-mono text-gray-200 hover:text-stellar-rose transition-all shadow-glass-card"
-              >
-                <div className="w-2 h-2 rounded-full bg-stellar-cyan" />
-                {shortenAddress(address)}
-              </button>
-            </div>
+            <button
+              onClick={disconnect}
+              style={{
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#FAFAFA',
+                border: '1px solid rgba(168, 85, 247, 0.4)',
+                padding: '8px 20px',
+                borderRadius: '100px',
+                background: 'rgba(168, 85, 247, 0.1)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <PlugsConnected size={16} weight="bold" className="text-purple-400" />
+              {shortenAddress(address)}
+            </button>
           ) : (
             <button
               onClick={() => openModal('connect_wallet')}
               disabled={isConnecting}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-stellar-violet to-purple-600 hover:from-purple-600 hover:to-stellar-violet text-white font-semibold text-sm shadow-glow-violet transition-all transform active:scale-95"
+              className="btn-gold-accent"
+              style={{ padding: '9px 22px', fontSize: '13px' }}
             >
-              <Wallet className="w-4 h-4" />
-              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              <Lightning size={16} weight="bold" />
+              {isConnecting ? 'Connecting…' : 'Connect Wallet'}
             </button>
           )}
         </div>

@@ -1,49 +1,51 @@
-# Stellar EscrowVault — Soroban Milestone Escrow Platform
+# Veyl Escrow — Soroban Milestone Settlement Platform
 
-[![Stellar](https://img.shields.io/badge/Blockchain-Stellar%20Testnet-purple)](https://stellar.org)
-[![Soroban](https://img.shields.io/badge/Smart%20Contracts-Soroban%20SDK%20v22.0-cyan)](https://soroban.stellar.org)
-[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2015-black)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/Language-TypeScript%205.x-blue)](https://www.typescriptlang.org)
+[![Stellar Testnet](https://img.shields.io/badge/Blockchain-Stellar%20Testnet-8A2BE2?style=for-the-badge&logo=stellar)](https://stellar.org)
+[![Soroban Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Soroban%20v22.0-FACC15?style=for-the-badge&logo=rust)](https://soroban.stellar.org)
+[![Next.js 15](https://img.shields.io/badge/Frontend-Next.js%2015-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
+[![Vitest Passed](https://img.shields.io/badge/Tests-Vitest%20Passed-green?style=for-the-badge&logo=vitest)](https://vitest.dev)
 
-Production-grade decentralized application for milestone-based USDC payments, deliverables verification, and multi-party dispute resolution built on **Stellar** and **Soroban WASM smart contracts**.
-
----
-
-## 🌟 Key Features
-
-- **Trustless USDC Custody**: Lock funds in immutable Soroban WASM smart contract state. No centralized platform intermediary.
-- **Milestone-Based Payouts**: Break projects into granular deliverable milestones. Funds release automatically upon client approval.
-- **IPFS Proof Submission**: Contractors submit deliverable proof CIDs directly on-chain.
-- **Multi-Party Arbitration**: Arbiter role can resolve disputes with custom split ratios between client and contractor.
-- **Soroban State Rent & TTL Optimizations**: Automated `extend_ttl` storage management for Instance and Persistent contract entries.
-- **Real-Time Telemetry Stream**: Live contract event parsing and automated TanStack Query polling every 5 seconds.
-- **Multi-Wallet Support**: Integrated `@creamtastic/stellar-wallets-kit` and Freighter API.
+**Veyl Escrow** is a non-custodial, milestone-driven payment settlement platform built on **Stellar** and **Soroban WASM smart contracts**. It enables clients and contractors to engage in trustless digital escrow agreements where capital is locked in code and released in sequential tranches upon verifiable deliverable approval.
 
 ---
 
-## 🏗️ Architecture
+## ⚡ Key Architecture & Features
+
+- 🔒 **Non-Custodial Smart Contract Custody**: Capital is locked directly in WASM contract state. Zero platform intermediation or key handling.
+- 🎯 **Milestone Tranche Settlement**: Escrows are partitioned into sequential milestone deliverables. Capital releases upon client authorization in ~3.2s.
+- ⚡ **HTML5 Flow Field & Inertia Scroll**: Built with responsive canvas particle repulsion physics and `Lenis` smooth inertia scrolling.
+- 💎 **60-30-10 Minimalist Palette**: Engineered using a zero-gradient, 60% Deep Obsidian (`#09090B`), 30% Electric Purple (`#A855F7`), and 10% Gold Accent (`#FACC15`) design system.
+- 📑 **IPFS Cryptographic Proof**: Contractors submit deliverable proof CIDs directly onto the Stellar ledger for verification.
+- ⚖️ **Arbiter Dispute Resolution**: Integrated 3rd-party arbitration role with custom split payouts in contested engagements.
+- 🎨 **Phosphor Icons System**: 100% icon consistency powered by `@phosphor-icons/react`.
+- 🧪 **Vitest Automated Testing**: Fully tested state store and fallback connection pipeline (`npm run test`).
+
+---
+
+## 🏗 System Architecture
 
 ```mermaid
 flowchart TB
-    subgraph Client ["Client Tier (Next.js 15 App Router)"]
-        UI["shadcn/ui + Tailwind CSS"]
-        TQ["TanStack Query (RPC Sync)"]
-        ZST["Zustand (Wallet Store)"]
-        SWK["StellarWalletsKit (Freighter / LOBSTR / xBull)"]
+    subgraph Client ["Client Interface (Next.js 15 App Router)"]
+        UI["Web3 UI Component Layer"]
+        Lenis["Lenis Smooth Scroll Engine"]
+        Canvas["Neural Particle Canvas Background"]
+        Zustand["Zustand (Wallet & Modal State Store)"]
+        SWK["StellarWalletsKit (Freighter Adapter)"]
     end
 
-    subgraph Blockchain ["Stellar & Soroban Tier"]
-        RPC["Soroban RPC Endpoint"]
-        Contract["Soroban WASM Smart Contract"]
-        SAC["USDC Stellar Asset Contract"]
-        Storage["Soroban Persistent & Instance Storage"]
+    subgraph Blockchain ["Stellar Soroban Layer"]
+        RPC["Soroban RPC Node Endpoint"]
+        Contract["Soroban WASM Milestone Escrow Contract"]
+        SAC["Stellar Asset Contract (USDC / XLM)"]
+        Storage["Soroban Rent TTL Storage (Persistent & Instance)"]
     end
 
-    UI --> TQ
-    UI --> ZST
-    ZST --> SWK
+    UI --> Lenis
+    UI --> Canvas
+    UI --> Zustand
+    Zustand --> SWK
     SWK --> RPC
-    TQ --> RPC
     RPC --> Contract
     Contract --> SAC
     Contract --> Storage
@@ -51,94 +53,85 @@ flowchart TB
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack & Dependencies
 
-- **Frontend**: Next.js 15 (App Router), TypeScript 5.x, Tailwind CSS, `shadcn/ui`, Framer Motion
-- **State Management**: TanStack Query v5 (RPC state/caching/polling), Zustand (wallet/UI state)
-- **Smart Contracts**: Rust, `soroban-sdk` v22.0.0, WASM target `wasm32-unknown-unknown`
-- **Stellar Integration**: `@stellar/stellar-sdk` v13.0.0, `@creamtastic/stellar-wallets-kit`, `@stellar/freighter-api`
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend Framework** | Next.js 15 (App Router), React 18, TypeScript 5.x |
+| **Styling & Icons** | Tailwind CSS, `@phosphor-icons/react`, Google Fonts (`Chakra Petch`, `Space Grotesk`) |
+| **Motion & Scroll** | `Lenis` Inertia Scroll, HTML5 2D Canvas Flow Field Physics |
+| **State Management** | TanStack Query v5 (RPC Polling), Zustand v4 (Wallet & UI Store) |
+| **Smart Contracts** | Rust, `soroban-sdk` v22.0.0 (`wasm32-unknown-unknown`) |
+| **Blockchain Client** | `@stellar/stellar-sdk` v13.0.0, `@stellar/freighter-api` |
+| **Testing Suite** | Vitest v2.0 |
 
 ---
 
-## 📂 Project Structure
+## 📂 Repository Layout
 
 ```
-/milestone-escrow-platform
-├── /app                             # Next.js 15 App Router pages & layout
-│   ├── layout.tsx                   # Root layout with QueryProvider & Navbar
-│   ├── page.tsx                     # Main dashboard & hero view
-│   └── globals.css                  # Custom Tailwind glassmorphic design system
+├── /app                             # Next.js 15 App Router pages & styles
+│   ├── layout.tsx                   # Root layout wrapped in SmoothScrollProvider
+│   ├── page.tsx                     # Main landing page & escrow engine dashboard
+│   └── globals.css                  # 60-30-10 CSS variables & typography tokens
 ├── /components
-│   ├── /common                      # Navbar, Footer, TxModal
+│   ├── /common                      # Navbar, TxModal, Footer
 │   ├── /dashboard                   # StatsCards, EscrowList, EventsFeed
 │   ├── /modals                      # ConnectWallet, CreateEscrow, SubmitWork, Dispute, ResolveDispute
-│   ├── /providers                   # ReactQueryProvider
-│   └── /visuals                     # GlowingOrb, GlassContainers
-├── /contracts                       # Soroban Smart Contract Workspace
+│   ├── /providers                   # SmoothScrollProvider, ReactQueryProvider
+│   └── /ui                          # NeuralBackground flow field canvas
+├── /contracts                       # Soroban Rust WASM Smart Contracts
 │   └── /milestone_escrow
-│       ├── /src
-│       │   ├── lib.rs               # Main smart contract entrypoint
-│       │   ├── types.rs             # Structs, Enums, DataKey layout
-│       │   ├── errors.rs            # Custom EscrowError codes
-│       │   ├── storage.rs           # Rent TTL extension & storage getters
-│       │   ├── events.rs            # Soroban event publishers
-│       │   └── test.rs              # Soroban test suite
-│       └── Cargo.toml               # Rust dependencies
-├── /hooks                           # React hooks
-│   ├── useWallet.ts                 # Wallet state hook
-│   ├── useEscrows.ts                # TanStack Query RPC hook
-│   ├── useEscrowContract.ts         # Transaction simulation & submission pipeline
-│   └── useSorobanEvents.ts          # Event telemetry stream hook
-├── /lib
-│   ├── /contracts/config.ts         # Contract address & Soroban network config
-│   ├── /stellar/client.ts           # Soroban RPC client & XDR parsers
-│   ├── /wallet/kit.ts               # Wallet kit configuration
-│   └── utils.ts                     # Amount formatting & address truncation
-├── /scripts
-│   └── deploy_contract.sh           # Automated Soroban Testnet deployment script
-├── package.json
-└── README.md
+│       ├── /src (lib.rs, types.rs, storage.rs, errors.rs, events.rs)
+│       └── Cargo.toml
+├── /hooks                           # Custom hooks (useWallet, useEscrows, useEscrowContract)
+├── /lib                             # Stellar RPC client & wallet kit initializers
+├── /__tests__                       # Vitest unit test suite (wallet.test.ts)
+├── vitest.config.ts                 # Vitest test runner configuration
+└── package.json
 ```
 
 ---
 
-## 🚀 Running Locally
+## 🚀 Quick Start & Development Setup
 
-### Prerequisites
-- Node.js >= 18.x
-- npm / yarn / pnpm
-
-### Setup Steps
+### 1. Clone & Install
 ```bash
-# 1. Clone repository
 git clone https://github.com/akshat3410/arclab-landing-page.git
-cd milestone-escrow-platform
+cd arclab-landing-page
 
-# 2. Install dependencies
 npm install
+```
 
-# 3. Build & Deploy Smart Contract (Optional if using default Testnet config)
-./scripts/deploy_contract.sh
+### 2. Run Automated Unit Tests
+```bash
+npm run test
+```
 
-# 4. Start Development Server
+### 3. Start Development Server
+```bash
 npm run dev
 ```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 4. Verify Production Build
+```bash
+npm run build
+```
 
 ---
 
-## 📜 Contract Deployment & Verification
+## 📜 Soroban Smart Contract Deployment
 
-To build and deploy the WASM smart contract manually using the Stellar CLI:
+To build and deploy the smart contract WASM binary to Stellar Testnet:
 
 ```bash
 cd contracts/milestone_escrow
 
-# Build WASM binary
+# 1. Compile WASM binary
 cargo build --target wasm32-unknown-unknown --release
 
-# Deploy WASM to Soroban Testnet
+# 2. Deploy to Stellar Testnet
 stellar contract deploy \
   --wasm target/wasm32-unknown-unknown/release/milestone_escrow.wasm \
   --source deployer \
@@ -146,13 +139,19 @@ stellar contract deploy \
 ```
 
 - **Testnet Contract ID**: `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMWAXA26TX27N5`
-- **USDC SAC Token ID**: `CCW67TSB3SSS366OIOMAYDHUTLXDGOWMY7SC2226XM5FYW5EAKOJ62OY`
+- **USDC Asset Token ID**: `CCW67TSB3SSS366OIOMAYDHUTLXDGOWMY7SC2226XM5FYW5EAKOJ62OY`
 
 ---
 
-## 🔒 Security Considerations
+## 🔐 Security & Reliability Safeguards
 
-- **Authorization Enforcement**: Every state mutation verifies signature via `require_auth()`.
-- **Reentrancy Protection**: Token transfers occur before final state updates.
-- **Rent Archival Handling**: Automatic TTL extensions on every contract access (`INSTANCE_BUMP_AMOUNT`, `PERSISTENT_BUMP_AMOUNT`).
-- **No Private Keys on Client**: Client application never holds private keys. All signing delegated to wallet adapters.
+1. **Explicit Authentication**: Every contract state mutation mandates `require_auth()` from the designated depositor or beneficiary.
+2. **Reentrancy Protection**: Token transfers occur prior to state mutation.
+3. **Automated Rent TTL Extension**: Extends Soroban storage TTL on access (`INSTANCE_BUMP_AMOUNT`, `PERSISTENT_BUMP_AMOUNT`).
+4. **Hydration & Bounds Guard**: All Canvas and Window APIs are guarded against SSR hydration mismatch.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for details.

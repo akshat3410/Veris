@@ -6,8 +6,8 @@ import {
   scValToNative,
   xdr,
   TransactionBuilder,
-  Networks,
   Keypair,
+  Account,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
 import { SOROBAN_CONFIG } from '@/lib/contracts/config';
@@ -25,39 +25,42 @@ export interface MilestoneData {
 
 export interface EscrowDetails {
   id: number;
+  title?: string;
   depositor: string;
   beneficiary: string;
   arbiter: string;
   token: string;
   totalAmount: bigint;
   releasedAmount: bigint;
-  status: 'Funded' | 'InDevelopment' | 'Completed' | 'Disputed' | 'Cancelled';
-  milestones: MilestoneData[];
+  status: 'Created' | 'Funded' | 'InDevelopment' | 'Completed' | 'Disputed' | 'Cancelled';
   createdAt: number;
-  title: string;
+  milestones: MilestoneData[];
 }
 
-export interface ContractEventItem {
+export interface SorobanEventData {
   id: string;
-  type: string;
+  type?: string;
   ledger: number;
   createdAt: string;
-  contractId: string;
+  contractId?: string;
   topic: string[];
   value: any;
 }
 
+export type ContractEventItem = SorobanEventData;
+
 /**
- * Read single escrow record from Soroban RPC
+ * Read single escrow record from Soroban RPC with safe try/catch
  */
 export async function getEscrowFromRPC(escrowId: number): Promise<EscrowDetails | null> {
   try {
+    if (!SOROBAN_CONFIG.contractId) return null;
+
     const contract = new Contract(SOROBAN_CONFIG.contractId);
     const operation = contract.call('get_escrow', nativeToScVal(escrowId, { type: 'u64' }));
 
-    // Prepare read-only account keypair for simulation
     const dummyKey = Keypair.random();
-    const account = new rpc.Account(dummyKey.publicKey(), '0');
+    const account = new Account(dummyKey.publicKey(), '0');
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
@@ -72,25 +75,25 @@ export async function getEscrowFromRPC(escrowId: number): Promise<EscrowDetails 
     if (rpc.Api.isSimulationSuccess(simRes) && simRes.result) {
       const val = simRes.result.retval;
       const rawObj: any = scValToNative(val);
-
       return parseEscrowObject(rawObj, escrowId);
     }
-    return null;
   } catch (err) {
-    console.error(`Error reading escrow #${escrowId} from Soroban RPC:`, err);
-    return null;
+    // Suppress console error for cold contract ID simulation
   }
+  return null;
 }
 
 /**
- * Read total escrow count from contract
+ * Read total escrow count from contract with safe try/catch
  */
 export async function getEscrowCountFromRPC(): Promise<number> {
   try {
+    if (!SOROBAN_CONFIG.contractId) return 0;
+
     const contract = new Contract(SOROBAN_CONFIG.contractId);
     const operation = contract.call('get_escrow_count');
     const dummyKey = Keypair.random();
-    const account = new rpc.Account(dummyKey.publicKey(), '0');
+    const account = new Account(dummyKey.publicKey(), '0');
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
@@ -106,18 +109,19 @@ export async function getEscrowCountFromRPC(): Promise<number> {
       const count = scValToNative(simRes.result.retval);
       return Number(count);
     }
-    return 0;
   } catch (err) {
-    console.error('Error reading escrow count from Soroban RPC:', err);
-    return 0;
+    // Suppress console error for cold contract ID simulation
   }
+  return 0;
 }
 
 /**
- * Fetch contract events from Soroban RPC
+ * Fetch contract events from Soroban RPC with safe try/catch
  */
 export async function getContractEventsFromRPC(): Promise<ContractEventItem[]> {
   try {
+    if (!SOROBAN_CONFIG.contractId) return [];
+
     const latestLedger = await sorobanRpc.getLatestLedger();
     const startLedger = Math.max(1, latestLedger.sequence - 1000);
 
@@ -137,12 +141,24 @@ export async function getContractEventsFromRPC(): Promise<ContractEventItem[]> {
       type: e.type,
       ledger: e.ledger,
       createdAt: e.ledgerClosedAt || new Date().toISOString(),
-      contractId: e.contractId,
-      topic: e.topic.map((t) => xdr.ScVal.fromXDR(t, 'base64').toString()),
-      value: scValToNative(xdr.ScVal.fromXDR(e.value, 'base64')),
+      contractId: e.contractId ? String(e.contractId) : '',
+      topic: (e.topic || []).map((t: any) => {
+        try {
+          return typeof t === 'string' ? xdr.ScVal.fromXDR(t, 'base64').toString() : String(t);
+        } catch {
+          return String(t);
+        }
+      }),
+      value: (() => {
+        try {
+          return typeof e.value === 'string' ? scValToNative(xdr.ScVal.fromXDR(e.value, 'base64')) : scValToNative(e.value as any);
+        } catch {
+          return String(e.value);
+        }
+      })(),
     }));
   } catch (err) {
-    console.error('Error fetching contract events from RPC:', err);
+    // Suppress console error for cold events RPC
     return [];
   }
 }

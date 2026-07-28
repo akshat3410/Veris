@@ -142,31 +142,10 @@ export function useEscrowContract() {
         throw new Error(`Transaction execution failed on ledger with status: ${statusRes.status}`);
       }
     } catch (err: any) {
-      console.warn('Simulated fallback execution for portfolio preview:', err?.message);
-
-      // Dispatch Webhook Backend Confirmation for demo execution
-      const demoHash = `tx_${Date.now().toString(16)}_${Math.random().toString(36).substring(2, 8)}`;
-      try {
-        await fetch('/api/webhook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: method,
-            txHash: demoHash,
-            contractId: SOROBAN_CONFIG.contractId,
-            status: 'SUCCESS',
-            simulated: true,
-          }),
-        });
-      } catch (e) {
-        // ignore
-      }
-
-      setTxState({ stage: 'pending', txHash: demoHash, error: null });
-      await new Promise((r) => setTimeout(r, 1200));
-      setTxState({ stage: 'confirmed', txHash: demoHash, error: null });
-      queryClient.invalidateQueries({ queryKey: ['escrows'] });
-      return true;
+      const errorMsg = err?.message || 'Transaction submission failed';
+      console.error('[Real Soroban Execution Error]:', errorMsg);
+      setTxState({ stage: 'failed', txHash: null, error: errorMsg });
+      return false;
     }
   };
 

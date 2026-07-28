@@ -112,7 +112,6 @@ npm run test
 ```bash
 npm run dev
 ```
-Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ### 4. Verify Production Build
 ```bash
@@ -138,8 +137,7 @@ stellar contract deploy \
   --network testnet
 ```
 
-- **Testnet Contract ID**: `CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT`
-- **USDC Asset Token ID**: `CCW67TSB3SSS366OIOMAYDHUTLXDGOWMY7SC2226XM5FYW5EAKOJ62OY`
+##- **Smart Contract Adress **: `CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT`
 
 ---
 

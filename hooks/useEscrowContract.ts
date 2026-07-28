@@ -11,6 +11,7 @@ import {
   BASE_FEE,
   Address,
   Account,
+  xdr,
 } from '@stellar/stellar-sdk';
 
 export type TxStage = 'idle' | 'simulating' | 'signing' | 'submitting' | 'pending' | 'confirmed' | 'failed';
@@ -149,12 +150,28 @@ export function useEscrowContract() {
     }
   };
 
-  const safeAddressScVal = (addrStr: string) => {
-    try {
-      return new Address(addrStr).toScVal();
-    } catch {
-      return new Address(SOROBAN_CONFIG.contractId).toScVal();
-    }
+  /**
+   * Helper: encode a JS string as a Soroban String (ScVal)
+   */
+  const sorobanString = (str: string): xdr.ScVal => {
+    return xdr.ScVal.scvString(str);
+  };
+
+  /**
+   * Helper: encode a MilestoneInput struct matching the contract's #[contracttype]
+   * MilestoneInput { title: String, amount: i128 }
+   */
+  const encodeMilestoneInput = (title: string, amount: bigint): xdr.ScVal => {
+    return xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('amount'),
+        val: nativeToScVal(amount, { type: 'i128' }),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('title'),
+        val: sorobanString(title),
+      }),
+    ]);
   };
 
   /**
@@ -168,20 +185,22 @@ export function useEscrowContract() {
   ) => {
     if (!address) return false;
 
-    const milestonesScVal = nativeToScVal(
-      milestones.map((m) => ({
-        title: m.title,
-        amount: BigInt(Math.round(parseFloat(m.amount) * 1e7)),
-      }))
+    // Encode milestones as Vec<MilestoneInput> — a Soroban vector of contract structs
+    const milestoneScVals = milestones.map((m) =>
+      encodeMilestoneInput(
+        m.title,
+        BigInt(Math.round(parseFloat(m.amount) * 1e7))
+      )
     );
+    const milestonesVec = xdr.ScVal.scvVec(milestoneScVals);
 
     return executeContractCall('create_escrow', [
-      safeAddressScVal(address),
-      safeAddressScVal(beneficiary),
-      safeAddressScVal(arbiter),
-      safeAddressScVal(SOROBAN_CONFIG.usdcTokenId),
-      nativeToScVal(title),
-      milestonesScVal,
+      new Address(address).toScVal(),
+      new Address(beneficiary).toScVal(),
+      new Address(arbiter).toScVal(),
+      new Address(SOROBAN_CONFIG.usdcTokenId).toScVal(),
+      sorobanString(title),
+      milestonesVec,
     ]);
   };
 
@@ -189,7 +208,7 @@ export function useEscrowContract() {
     return executeContractCall('submit_milestone_work', [
       nativeToScVal(escrowId, { type: 'u64' }),
       nativeToScVal(milestoneIndex, { type: 'u32' }),
-      nativeToScVal(proofCid),
+      sorobanString(proofCid),
     ]);
   };
 
@@ -204,7 +223,7 @@ export function useEscrowContract() {
     return executeContractCall('dispute_milestone', [
       nativeToScVal(escrowId, { type: 'u64' }),
       nativeToScVal(milestoneIndex, { type: 'u32' }),
-      nativeToScVal(reasonCid),
+      sorobanString(reasonCid),
     ]);
   };
 

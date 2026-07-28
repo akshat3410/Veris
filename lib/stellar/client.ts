@@ -6,10 +6,12 @@ import {
   scValToNative,
   xdr,
   TransactionBuilder,
-  Keypair,
   Account,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
+
+// Static dummy address for read-only simulations (no Keypair import = no sodium-native in browser)
+const DUMMY_PUBKEY = 'GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7';
 import { SOROBAN_CONFIG } from '@/lib/contracts/config';
 
 export const sorobanRpc = new rpc.Server(SOROBAN_CONFIG.rpcUrl);
@@ -59,8 +61,7 @@ export async function getEscrowFromRPC(escrowId: number): Promise<EscrowDetails 
     const contract = new Contract(SOROBAN_CONFIG.contractId);
     const operation = contract.call('get_escrow', nativeToScVal(escrowId, { type: 'u64' }));
 
-    const dummyKey = Keypair.random();
-    const account = new Account(dummyKey.publicKey(), '0');
+    const account = new Account(DUMMY_PUBKEY, '0');
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,
@@ -92,8 +93,7 @@ export async function getEscrowCountFromRPC(): Promise<number> {
 
     const contract = new Contract(SOROBAN_CONFIG.contractId);
     const operation = contract.call('get_escrow_count');
-    const dummyKey = Keypair.random();
-    const account = new Account(dummyKey.publicKey(), '0');
+    const account = new Account(DUMMY_PUBKEY, '0');
 
     const tx = new TransactionBuilder(account, {
       fee: BASE_FEE,

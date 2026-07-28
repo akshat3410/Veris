@@ -12,7 +12,6 @@ import {
   BASE_FEE,
   Address,
   xdr,
-  Keypair,
 } from '@stellar/stellar-sdk';
 import { signTransaction } from '@stellar/freighter-api';
 
@@ -24,57 +23,18 @@ export interface TxState {
   error: string | null;
 }
 
-// ─── Address Validation ─────────────────────────────────────────────
-// Stellar SDK's `new Address(str)` only accepts C... (contract) keys.
-// For G... (account) keys, we must validate the StrKey and build the
-// ScVal manually.  This helper guarantees a valid ScVal or throws.
+// ─── Address → ScVal (no Keypair, no sodium-native) ─────────────────
 
-function isValidStellarPublicKey(key: string): boolean {
-  try {
-    Keypair.fromPublicKey(key);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isValidContractId(id: string): boolean {
-  try {
-    new Address(id); // Address() only accepts C... keys
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Convert any Stellar address (G... public key OR C... contract ID) to an ScVal.
- * Throws with a descriptive message if the address is invalid.
- */
 function addressToScVal(addr: string): xdr.ScVal {
   if (!addr || typeof addr !== 'string') {
-    throw new Error('Address is empty or not a string');
+    throw new Error(`Address is empty or not a string`);
   }
   const trimmed = addr.trim();
-
-  // C... contract address
-  if (trimmed.startsWith('C') && trimmed.length === 56) {
-    return new Address(trimmed).toScVal();
+  if (trimmed.length !== 56 || (!/^[GC]/.test(trimmed))) {
+    throw new Error(`Invalid Stellar address (must be 56 chars starting with G or C): "${trimmed.slice(0, 10)}..."`);
   }
-
-  // G... account address
-  if (trimmed.startsWith('G') && trimmed.length === 56) {
-    if (!isValidStellarPublicKey(trimmed)) {
-      throw new Error(`Invalid Stellar public key: ${trimmed}`);
-    }
-    // Build ScVal manually: scvAddress(scAddressTypeAccount(publicKeyTypeEd25519(rawBytes)))
-    const kp = Keypair.fromPublicKey(trimmed);
-    const accountId = xdr.PublicKey.publicKeyTypeEd25519(kp.rawPublicKey());
-    const scAddress = xdr.ScAddress.scAddressTypeAccount(accountId);
-    return xdr.ScVal.scvAddress(scAddress);
-  }
-
-  throw new Error(`Unsupported address format (must start with G or C, 56 chars): ${trimmed}`);
+  // Address class handles BOTH G... (account) and C... (contract) keys
+  return new Address(trimmed).toScVal();
 }
 
 // ─── Soroban Type Helpers ────────────────────────────────────────────
@@ -111,7 +71,8 @@ export function useEscrowContract() {
   const resetTx = () => setTxState({ stage: 'idle', txHash: null, error: null });
 
   /**
-   * Core pipeline: simulate → sign (Freighter) → submit → poll
+   * Core pipeline: build → simulate → sign (Freighter) → submit → poll
+   * Every step has numbered logging so we can trace failures.
    */
   const executeContractCall = async (
     method: string,
@@ -123,25 +84,33 @@ export function useEscrowContract() {
     }
 
     try {
-      // ── Step 1: Build & Simulate ──────────────────────────────────
-      setTxState({ stage: 'simulating', txHash: null, error: null });
-      console.log(`[Soroban] Calling ${method} with ${args.length} args`);
-
+      // ── STEP 1: Create server & contract ──────────────────────────
+      console.log('[Step 1] Creating server & contract...');
       const server = new rpc.Server(SOROBAN_CONFIG.rpcUrl);
       const contract = new Contract(SOROBAN_CONFIG.contractId);
-      const operation = contract.call(method, ...args);
+      console.log('[Step 1] ✅ Done');
 
-      // Get the caller's account (auto-fund via Friendbot if needed)
+      // ── STEP 2: Build operation ───────────────────────────────────
+      console.log(`[Step 2] Building operation: ${method} with ${args.length} args`);
+      const operation = contract.call(method, ...args);
+      console.log('[Step 2] ✅ Done');
+
+      // ── STEP 3: Get account ───────────────────────────────────────
+      setTxState({ stage: 'simulating', txHash: null, error: null });
+      console.log(`[Step 3] Fetching account: ${address}`);
       let account;
       try {
         account = await server.getAccount(address);
       } catch {
-        console.log('[Soroban] Account not found, funding via Friendbot...');
+        console.log('[Step 3] Account not found, funding via Friendbot...');
         await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(address)}`);
-        await new Promise((r) => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 3000));
         account = await server.getAccount(address);
       }
+      console.log('[Step 3] ✅ Done, seq:', account.sequenceNumber());
 
+      // ── STEP 4: Build transaction ─────────────────────────────────
+      console.log('[Step 4] Building transaction...');
       const tx = new TransactionBuilder(account, {
         fee: BASE_FEE,
         networkPassphrase: SOROBAN_CONFIG.networkPassphrase,
@@ -149,33 +118,52 @@ export function useEscrowContract() {
         .addOperation(operation)
         .setTimeout(60)
         .build();
+      console.log('[Step 4] ✅ Done');
 
-      // Use prepareTransaction (simulation + assembly in one call)
+      // ── STEP 5: Simulate via prepareTransaction ───────────────────
+      console.log('[Step 5] Simulating (prepareTransaction)...');
       let preparedTx;
       try {
         preparedTx = await server.prepareTransaction(tx);
       } catch (simErr: any) {
-        throw new Error(`Simulation failed: ${simErr?.message || simErr}`);
+        const simMsg = simErr?.message || String(simErr);
+        console.error('[Step 5] ❌ Simulation failed:', simMsg);
+        throw new Error(`Simulation failed: ${simMsg}`);
       }
+      console.log('[Step 5] ✅ Done');
 
-      // ── Step 2: Sign via Freighter ────────────────────────────────
-      setTxState({ stage: 'signing', txHash: null, error: null });
+      // ── STEP 6: Get XDR for signing ───────────────────────────────
+      console.log('[Step 6] Serializing XDR for signing...');
       const xdrToSign = preparedTx.toXDR();
-      console.log('[Soroban] Requesting Freighter signature...');
+      console.log('[Step 6] ✅ XDR length:', xdrToSign.length);
 
-      const signedXdr = await signTransaction(xdrToSign, {
+      // ── STEP 7: Sign via Freighter ────────────────────────────────
+      setTxState({ stage: 'signing', txHash: null, error: null });
+      console.log('[Step 7] Requesting Freighter signature...');
+      const freighterResult = await signTransaction(xdrToSign, {
         networkPassphrase: SOROBAN_CONFIG.networkPassphrase,
         accountToSign: address,
       });
 
-      if (!signedXdr || typeof signedXdr !== 'string' || signedXdr.length < 10) {
-        throw new Error('Freighter returned empty or invalid signed XDR');
+      // Freighter API v2+ returns { signedTxXdr, signerAddress }
+      // Older versions return a raw string
+      let signedXdr: string;
+      if (typeof freighterResult === 'string') {
+        signedXdr = freighterResult;
+      } else if (freighterResult && typeof freighterResult === 'object') {
+        signedXdr = (freighterResult as any).signedTxXdr || (freighterResult as any).xdr || '';
+      } else {
+        signedXdr = '';
       }
 
-      // ── Step 3: Submit ────────────────────────────────────────────
-      setTxState({ stage: 'submitting', txHash: null, error: null });
-      console.log('[Soroban] Submitting signed transaction...');
+      if (!signedXdr || signedXdr.length < 20) {
+        throw new Error('Freighter returned empty signed transaction. Did you reject the popup?');
+      }
+      console.log('[Step 7] ✅ Signed XDR length:', signedXdr.length);
 
+      // ── STEP 8: Parse & submit ────────────────────────────────────
+      setTxState({ stage: 'submitting', txHash: null, error: null });
+      console.log('[Step 8] Parsing signed XDR & submitting...');
       const signedTx = TransactionBuilder.fromXDR(signedXdr, SOROBAN_CONFIG.networkPassphrase);
       const sendRes = await server.sendTransaction(signedTx);
 
@@ -184,10 +172,11 @@ export function useEscrowContract() {
       }
 
       const txHash = sendRes.hash;
+      console.log('[Step 8] ✅ Submitted, hash:', txHash);
 
-      // ── Step 4: Poll for confirmation ─────────────────────────────
+      // ── STEP 9: Poll for confirmation ─────────────────────────────
       setTxState({ stage: 'pending', txHash, error: null });
-      console.log(`[Soroban] Polling tx: ${txHash}`);
+      console.log('[Step 9] Polling for confirmation...');
 
       let statusRes = await server.getTransaction(txHash);
       let attempts = 0;
@@ -209,15 +198,13 @@ export function useEscrowContract() {
             status: statusRes.status,
           }),
         });
-      } catch {
-        // webhook is optional
-      }
+      } catch { /* webhook is optional */ }
 
       if (statusRes.status === rpc.Api.GetTransactionStatus.SUCCESS) {
         setTxState({ stage: 'confirmed', txHash, error: null });
         queryClient.invalidateQueries({ queryKey: ['escrows'] });
         queryClient.invalidateQueries({ queryKey: ['events'] });
-        console.log(`[Soroban] ✅ Confirmed: ${txHash}`);
+        console.log(`[Step 9] ✅ CONFIRMED: https://stellar.expert/explorer/testnet/tx/${txHash}`);
         return true;
       } else {
         throw new Error(`Transaction failed on-chain: status=${statusRes.status}`);
@@ -240,56 +227,41 @@ export function useEscrowContract() {
   ) => {
     if (!address) return false;
 
-    // Validate ALL addresses BEFORE touching XDR
-    let depositorScVal: xdr.ScVal;
-    let beneficiaryScVal: xdr.ScVal;
-    let arbiterScVal: xdr.ScVal;
-    let tokenScVal: xdr.ScVal;
+    console.log('[createEscrow] Encoding arguments...');
+    console.log('  depositor:', address);
+    console.log('  beneficiary:', beneficiary || '(using depositor)');
+    console.log('  arbiter:', arbiter || '(using depositor)');
+    console.log('  token:', SOROBAN_CONFIG.usdcTokenId);
+    console.log('  milestones:', milestones.length);
 
     try {
-      depositorScVal = addressToScVal(address);
+      const depositorScVal = addressToScVal(address);
+      const beneficiaryScVal = addressToScVal(beneficiary || address);
+      const arbiterScVal = addressToScVal(arbiter || address);
+      const tokenScVal = addressToScVal(SOROBAN_CONFIG.usdcTokenId);
+
+      const milestoneScVals = milestones.map((m) =>
+        encodeMilestoneInput(
+          m.title || 'Milestone',
+          BigInt(Math.round((parseFloat(m.amount) || 1) * 1e7))
+        )
+      );
+
+      console.log('[createEscrow] ✅ All args encoded successfully');
+
+      return executeContractCall('create_escrow', [
+        depositorScVal,
+        beneficiaryScVal,
+        arbiterScVal,
+        tokenScVal,
+        sorobanString(title || 'Escrow Contract'),
+        xdr.ScVal.scvVec(milestoneScVals),
+      ]);
     } catch (e: any) {
-      setTxState({ stage: 'failed', txHash: null, error: `Invalid depositor address: ${e.message}` });
+      console.error('[createEscrow] ❌ Arg encoding failed:', e.message);
+      setTxState({ stage: 'failed', txHash: null, error: `Encoding error: ${e.message}` });
       return false;
     }
-
-    try {
-      beneficiaryScVal = addressToScVal(beneficiary || address);
-    } catch (e: any) {
-      setTxState({ stage: 'failed', txHash: null, error: `Invalid beneficiary address: ${e.message}` });
-      return false;
-    }
-
-    try {
-      arbiterScVal = addressToScVal(arbiter || address);
-    } catch (e: any) {
-      setTxState({ stage: 'failed', txHash: null, error: `Invalid arbiter address: ${e.message}` });
-      return false;
-    }
-
-    try {
-      tokenScVal = addressToScVal(SOROBAN_CONFIG.usdcTokenId);
-    } catch (e: any) {
-      setTxState({ stage: 'failed', txHash: null, error: `Invalid token address: ${e.message}` });
-      return false;
-    }
-
-    // Build milestones Vec<MilestoneInput>
-    const milestoneScVals = milestones.map((m) =>
-      encodeMilestoneInput(
-        m.title || 'Milestone',
-        BigInt(Math.round((parseFloat(m.amount) || 1) * 1e7))
-      )
-    );
-
-    return executeContractCall('create_escrow', [
-      depositorScVal,
-      beneficiaryScVal,
-      arbiterScVal,
-      tokenScVal,
-      sorobanString(title || 'Escrow Contract'),
-      xdr.ScVal.scvVec(milestoneScVals),
-    ]);
   };
 
   const submitMilestoneWork = async (escrowId: number, milestoneIndex: number, proofCid: string) => {

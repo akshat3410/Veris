@@ -1,5 +1,5 @@
 import { SOROBAN_CONFIG } from '@/lib/contracts/config';
-import { isAllowed, setAllowed, getUserInfo, signTransaction } from '@stellar/freighter-api';
+import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api';
 
 /**
  * Connect to Freighter wallet — NO fake fallback.
@@ -11,10 +11,13 @@ export async function connectFreighterWallet(): Promise<{ address: string; walle
     await setAllowed();
   }
 
-  const userInfo = await getUserInfo();
-  if (userInfo && userInfo.publicKey) {
+  const { address, error } = await getAddress();
+  if (error) {
+    throw new Error(`Freighter error: ${error.message || JSON.stringify(error)}`);
+  }
+  if (address) {
     return {
-      address: userInfo.publicKey,
+      address,
       walletType: 'freighter',
     };
   }
@@ -29,16 +32,18 @@ export async function connectFreighterWallet(): Promise<{ address: string; walle
 export async function signTransactionXDR(xdr: string, userAddress: string): Promise<string> {
   const result = await signTransaction(xdr, {
     networkPassphrase: SOROBAN_CONFIG.networkPassphrase,
-    accountToSign: userAddress,
+    address: userAddress,
   });
 
-  // Freighter v2+ returns { signedTxXdr: string } or a plain string
-  if (typeof result === 'string') {
-    return result;
-  }
-  if (result && typeof result === 'object' && 'signedTxXdr' in result) {
-    return (result as any).signedTxXdr;
+  if (result.error) {
+    throw new Error(`Freighter signing error: ${result.error.message || JSON.stringify(result.error)}`);
   }
 
-  throw new Error('Freighter returned unexpected signing result');
+  const signedXdr = result.signedTxXdr;
+
+  if (!signedXdr) {
+    throw new Error('Freighter returned empty signed transaction');
+  }
+
+  return signedXdr;
 }

@@ -142,19 +142,14 @@ export function useEscrowContract() {
       console.log('[Step 7] Requesting Freighter signature...');
       const freighterResult = await signTransaction(xdrToSign, {
         networkPassphrase: SOROBAN_CONFIG.networkPassphrase,
-        accountToSign: address,
+        address: address,
       });
 
-      // Freighter API v2+ returns { signedTxXdr, signerAddress }
-      // Older versions return a raw string
-      let signedXdr: string;
-      if (typeof freighterResult === 'string') {
-        signedXdr = freighterResult;
-      } else if (freighterResult && typeof freighterResult === 'object') {
-        signedXdr = (freighterResult as any).signedTxXdr || (freighterResult as any).xdr || '';
-      } else {
-        signedXdr = '';
+      if (freighterResult.error) {
+        throw new Error(`Freighter error: ${freighterResult.error.message || JSON.stringify(freighterResult.error)}`);
       }
+
+      const signedXdr = freighterResult.signedTxXdr;
 
       if (!signedXdr || signedXdr.length < 20) {
         throw new Error('Freighter returned empty signed transaction. Did you reject the popup?');

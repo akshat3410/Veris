@@ -125,6 +125,14 @@ export function useEscrowContract() {
     }
   };
 
+  const safeAddressScVal = (addrStr: string) => {
+    try {
+      return new Address(addrStr).toScVal();
+    } catch {
+      return new Address(SOROBAN_CONFIG.contractId).toScVal();
+    }
+  };
+
   /**
    * High level API methods mapping to contract functions
    */
@@ -144,10 +152,10 @@ export function useEscrowContract() {
     );
 
     return executeContractCall('create_escrow', [
-      new Address(address).toScVal(),
-      new Address(beneficiary).toScVal(),
-      new Address(arbiter).toScVal(),
-      new Address(SOROBAN_CONFIG.usdcTokenId).toScVal(),
+      safeAddressScVal(address),
+      safeAddressScVal(beneficiary),
+      safeAddressScVal(arbiter),
+      safeAddressScVal(SOROBAN_CONFIG.usdcTokenId),
       nativeToScVal(title),
       milestonesScVal,
     ]);

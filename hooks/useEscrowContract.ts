@@ -187,19 +187,27 @@ export function useEscrowContract() {
 
   /**
    * Helper: safely convert an address string to a Soroban Address ScVal.
-   * If the input is an invalid StrKey, fall back to fallbackAddr (or address).
+   * Guaranteed to return a valid xdr.ScVal (never undefined).
    */
   const parseAddressScVal = (addrStr?: string, fallbackAddr?: string): xdr.ScVal => {
-    const target = (addrStr && addrStr.trim()) || fallbackAddr || address || SOROBAN_CONFIG.deployerAddress;
-    try {
-      return new Address(target).toScVal();
-    } catch {
+    const candidates = [
+      addrStr && addrStr.trim(),
+      fallbackAddr && fallbackAddr.trim(),
+      address && address.trim(),
+      SOROBAN_CONFIG.deployerAddress,
+    ];
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
       try {
-        return new Address(fallbackAddr || address || SOROBAN_CONFIG.deployerAddress).toScVal();
+        return new Address(candidate).toScVal();
       } catch {
-        return new Address(SOROBAN_CONFIG.deployerAddress).toScVal();
+        // Continue to next candidate if candidate has invalid CRC16 checksum
       }
     }
+
+    // Ultimate fallback using valid deployer address
+    return new Address(SOROBAN_CONFIG.deployerAddress).toScVal();
   };
 
   /**

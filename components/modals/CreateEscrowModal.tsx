@@ -13,7 +13,7 @@ export function CreateEscrowModal() {
 
   const [title, setTitle] = useState('');
   const [beneficiary, setBeneficiary] = useState('');
-  const [arbiter, setArbiter] = useState('GCA374JHS829374KSJH829374KSJH829374KSJH829374KSJH829374K');
+  const [arbiter, setArbiter] = useState('GB4BM2YCLSFWBF65VEYBFBDLLHGJ6W5X4LKPYO2AO6XELY7QJNXRUISB');
   const [milestones, setMilestones] = useState([
     { title: 'Milestone 1: Design & Architecture Spec', amount: '1000' },
     { title: 'Milestone 2: Soroban Smart Contract & Testing', amount: '1500' },

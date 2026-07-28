@@ -48,7 +48,7 @@ export function EscrowList({ escrows }: EscrowListProps) {
       <TxModal txState={txState} onClose={resetTx} />
 
       <div className="space-y-6">
-        {escrows.map((escrow) => {
+        {escrows.map((escrow, idx) => {
           const percentApproved =
             escrow.totalAmount > 0n
               ? Math.round(Number((escrow.releasedAmount * 100n) / escrow.totalAmount))
@@ -56,7 +56,7 @@ export function EscrowList({ escrows }: EscrowListProps) {
 
           return (
             <div
-              key={escrow.id}
+              key={`escrow-${escrow.id}-${idx}`}
               className="p-7 rounded-2xl bg-[#121216] border border-purple-500/25 hover:border-purple-500/45 transition-all space-y-5"
             >
               {/* Card Title & Capital Header */}

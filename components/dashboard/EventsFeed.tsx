@@ -33,9 +33,9 @@ export function EventsFeed() {
         <div className="py-8 text-center text-xs font-mono text-zinc-400">No contract events recorded yet.</div>
       ) : (
         <div className="space-y-3 font-mono text-xs max-h-64 overflow-y-auto pr-2">
-          {events.map((evt) => (
+          {events.map((evt, idx) => (
             <div
-              key={evt.id}
+              key={`evt-${evt.id}-${idx}`}
               className="p-3 rounded-xl bg-[#1A1A22] border border-zinc-800 flex items-center justify-between hover:border-purple-500/30 transition-colors"
             >
               <div className="flex items-center gap-3">

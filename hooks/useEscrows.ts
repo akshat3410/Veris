@@ -114,13 +114,31 @@ export function useEscrows() {
           const results = await Promise.all(fetchPromises);
           const validEscrows = results.filter((e): e is EscrowDetails => e !== null);
           if (validEscrows.length > 0) {
-            return [...CREATED_ESCROWS, ...validEscrows];
+            // Deduplicate: On-chain escrows take precedence over local CREATED_ESCROWS and DEMO_ESCROWS
+            const onChainIds = new Set(validEscrows.map((e) => e.id));
+            const remainingLocal = CREATED_ESCROWS.filter((e) => !onChainIds.has(e.id));
+            const combined = [...validEscrows, ...remainingLocal];
+
+            const seen = new Set<number>();
+            return combined.filter((e) => {
+              if (seen.has(e.id)) return false;
+              seen.add(e.id);
+              return true;
+            });
           }
         }
       } catch (err) {
         console.warn('RPC fetch failed, serving showcase state:', err);
       }
-      return [...CREATED_ESCROWS, ...DEMO_ESCROWS];
+      const createdIds = new Set(CREATED_ESCROWS.map((e) => e.id));
+      const remainingDemo = DEMO_ESCROWS.filter((e) => !createdIds.has(e.id));
+      const fallback = [...CREATED_ESCROWS, ...remainingDemo];
+      const seenFallback = new Set<number>();
+      return fallback.filter((e) => {
+        if (seenFallback.has(e.id)) return false;
+        seenFallback.add(e.id);
+        return true;
+      });
     },
     refetchInterval: 5000,
     staleTime: 1000,

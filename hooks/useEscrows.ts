@@ -2,6 +2,43 @@ import { useQuery } from '@tanstack/react-query';
 import { getEscrowFromRPC, getEscrowCountFromRPC, EscrowDetails } from '@/lib/stellar/client';
 import { SOROBAN_CONFIG } from '@/lib/contracts/config';
 
+let CREATED_ESCROWS: EscrowDetails[] = [];
+
+export function addNewEscrowContract(escrow: {
+  title: string;
+  depositor?: string;
+  beneficiary: string;
+  arbiter: string;
+  milestones: { title: string; amount: string }[];
+}) {
+  const totalAmountNum = escrow.milestones.reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0);
+  const nextId = DEMO_ESCROWS.length + CREATED_ESCROWS.length + 1;
+
+  const newEscrow: EscrowDetails = {
+    id: nextId,
+    title: escrow.title,
+    depositor: escrow.depositor || 'GDUPMODD6GJ60300H2HFF3CYEEGH2YFVZEHIVD0JSNXU07DYYGS6SCV6',
+    beneficiary: escrow.beneficiary,
+    arbiter: escrow.arbiter,
+    token: SOROBAN_CONFIG.usdcTokenId,
+    totalAmount: BigInt(Math.round(totalAmountNum * 1e7)),
+    releasedAmount: 0n,
+    status: 'InDevelopment',
+    createdAt: Math.floor(Date.now() / 1000),
+    milestones: escrow.milestones.map((m, idx) => ({
+      index: idx,
+      title: m.title,
+      amount: BigInt(Math.round((parseFloat(m.amount) || 0) * 1e7)),
+      status: 'Pending',
+      proofCid: '',
+      disputeReasonCid: '',
+    })),
+  };
+
+  CREATED_ESCROWS = [newEscrow, ...CREATED_ESCROWS];
+  return newEscrow;
+}
+
 // Mock/Demo escrows for seamless portfolio demonstration when offline/cold network
 const DEMO_ESCROWS: EscrowDetails[] = [
   {
@@ -77,16 +114,16 @@ export function useEscrows() {
           const results = await Promise.all(fetchPromises);
           const validEscrows = results.filter((e): e is EscrowDetails => e !== null);
           if (validEscrows.length > 0) {
-            return validEscrows;
+            return [...CREATED_ESCROWS, ...validEscrows];
           }
         }
       } catch (err) {
         console.warn('RPC fetch failed, serving showcase state:', err);
       }
-      return DEMO_ESCROWS;
+      return [...CREATED_ESCROWS, ...DEMO_ESCROWS];
     },
-    refetchInterval: 5000, // Live poll every 5s
-    staleTime: 3000,
+    refetchInterval: 5000,
+    staleTime: 1000,
   });
 }
 
@@ -95,6 +132,9 @@ export function useEscrow(id: number) {
     queryKey: ['escrow', id],
     queryFn: async (): Promise<EscrowDetails | null> => {
       if (!id) return null;
+      const localMatch = CREATED_ESCROWS.find((e) => e.id === id);
+      if (localMatch) return localMatch;
+
       try {
         const data = await getEscrowFromRPC(id);
         if (data) return data;

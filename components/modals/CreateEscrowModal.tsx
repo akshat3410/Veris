@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useUIStore } from '@/stores/useUIStore';
 import { useEscrowContract } from '@/hooks/useEscrowContract';
+import { addNewEscrowContract } from '@/hooks/useEscrows';
 import { TxModal } from '@/components/common/TxModal';
 import { Plus, Trash, ShieldCheck, CurrencyDollar, Stack, X } from '@phosphor-icons/react';
 
@@ -43,10 +44,15 @@ export function CreateEscrowModal() {
 
     const ok = await createEscrow(title, beneficiary, arbiter, milestones);
     if (ok) {
+      addNewEscrowContract({ title, beneficiary, arbiter, milestones });
       setTimeout(() => {
         closeModal();
         resetTx();
-      }, 2000);
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+          dashboard.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 1500);
     }
   };
 

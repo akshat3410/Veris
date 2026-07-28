@@ -175,6 +175,17 @@ export function useEscrowContract() {
   };
 
   /**
+   * Initialize the contract with the connected wallet as admin.
+   * Must be called once before any escrow can be created.
+   */
+  const initializeContract = async (): Promise<boolean> => {
+    if (!address) return false;
+    return executeContractCall('initialize', [
+      new Address(address).toScVal(),
+    ]);
+  };
+
+  /**
    * High level API methods mapping to contract functions
    */
   const createEscrow = async (
@@ -184,6 +195,30 @@ export function useEscrowContract() {
     milestones: { title: string; amount: string }[]
   ) => {
     if (!address) return false;
+
+    // Try to auto-initialize the contract if it hasn't been initialized yet
+    try {
+      const server = new rpc.Server(SOROBAN_CONFIG.rpcUrl);
+      const contract = new Contract(SOROBAN_CONFIG.contractId);
+      const testOp = contract.call('get_escrow_count');
+      const acct = await server.getAccount(address);
+      const testTx = new TransactionBuilder(acct, {
+        fee: BASE_FEE,
+        networkPassphrase: SOROBAN_CONFIG.networkPassphrase,
+      }).addOperation(testOp).setTimeout(30).build();
+      const testSim = await server.simulateTransaction(testTx);
+      if (rpc.Api.isSimulationError(testSim)) {
+        // Contract not initialized — initialize it now
+        console.log('[Contract] Auto-initializing contract...');
+        const initOk = await initializeContract();
+        if (!initOk) {
+          setTxState({ stage: 'failed', txHash: null, error: 'Failed to initialize contract. Please try again.' });
+          return false;
+        }
+      }
+    } catch (e) {
+      console.warn('[Contract] Pre-flight check skipped:', e);
+    }
 
     // Encode milestones as Vec<MilestoneInput> — a Soroban vector of contract structs
     const milestoneScVals = milestones.map((m) =>

@@ -15,8 +15,8 @@ export function CreateEscrowModal() {
   const [beneficiary, setBeneficiary] = useState('');
   const [arbiter, setArbiter] = useState('');
   const [milestones, setMilestones] = useState([
-    { title: 'Milestone 1: Design & Architecture Spec', amount: '1000' },
-    { title: 'Milestone 2: Soroban Smart Contract & Testing', amount: '1500' },
+    { title: 'Milestone 1: Design & Architecture Spec', amount: '10' },
+    { title: 'Milestone 2: Soroban Smart Contract & Testing', amount: '15' },
   ]);
 
   if (activeModal !== 'create_escrow') return null;
@@ -24,7 +24,7 @@ export function CreateEscrowModal() {
   const totalAmount = milestones.reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0);
 
   const handleAddMilestone = () => {
-    setMilestones([...milestones, { title: `Milestone ${milestones.length + 1}`, amount: '500' }]);
+    setMilestones([...milestones, { title: `Milestone ${milestones.length + 1}`, amount: '5' }]);
   };
 
   const handleRemoveMilestone = (index: number) => {

@@ -1,6 +1,20 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { connectFreighterWallet } from '@/lib/wallet/kit';
+
+// Mock Freighter API for headless Node testing environment
+vi.mock('@stellar/freighter-api', () => ({
+  isAllowed: vi.fn().mockResolvedValue(true),
+  setAllowed: vi.fn().mockResolvedValue(true),
+  getAddress: vi.fn().mockResolvedValue({
+    address: 'GBXGQJWVLWOYHFLVTKWV5FGHA3LNYY2JQW6F6JLH2B35VJ6R4ZPA6Q4U',
+    error: null,
+  }),
+  signTransaction: vi.fn().mockResolvedValue({
+    signedTxXdr: 'AAAA...MOCKED_XDR...',
+    error: null,
+  }),
+}));
 
 describe('EscrowVault Wallet & Store Suite', () => {
   beforeEach(() => {
@@ -23,14 +37,14 @@ describe('EscrowVault Wallet & Store Suite', () => {
     expect(state.walletType).toBe('freighter');
   });
 
-  it('handles freighter connection fallback without throwing', async () => {
+  it('connects to freighter wallet successfully with mocked provider', async () => {
     const result = await connectFreighterWallet();
-    expect(result.address).toBeDefined();
+    expect(result.address).toBe('GBXGQJWVLWOYHFLVTKWV5FGHA3LNYY2JQW6F6JLH2B35VJ6R4ZPA6Q4U');
     expect(result.walletType).toBe('freighter');
   });
 
   it('disconnects wallet state cleanly', () => {
-    useWalletStore.getState().setWallet('GBXG...Q4U', 'freighter');
+    useWalletStore.getState().setWallet('GBXGQJWVLWOYHFLVTKWV5FGHA3LNYY2JQW6F6JLH2B35VJ6R4ZPA6Q4U', 'freighter');
     useWalletStore.getState().disconnect();
 
     const state = useWalletStore.getState();

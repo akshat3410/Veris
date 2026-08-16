@@ -60,8 +60,8 @@ export function CreateEscrowModal() {
     <>
       <TxModal txState={txState} onClose={resetTx} />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-        <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-7 rounded-2xl bg-[#121216] border border-purple-500/30 shadow-2xl space-y-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+        <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl bg-[#121216] border border-purple-500/30 shadow-2xl space-y-5 sm:space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
             <div className="flex items-center gap-3">

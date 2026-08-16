@@ -57,25 +57,25 @@ export function EscrowList({ escrows }: EscrowListProps) {
           return (
             <div
               key={`escrow-${escrow.id}-${idx}`}
-              className="p-7 rounded-2xl bg-[#121216] border border-purple-500/25 hover:border-purple-500/45 transition-all space-y-5"
+              className="p-4 sm:p-7 rounded-2xl bg-[#121216] border border-purple-500/25 hover:border-purple-500/45 transition-all space-y-5"
             >
               {/* Card Title & Capital Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-zinc-800/80 pb-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-purple-500/15 text-purple-300 border border-purple-500/30">
                     Escrow #{escrow.id}
                   </span>
-                  <h3 className="font-bold text-xl text-white tracking-tight">
+                  <h3 className="font-bold text-lg sm:text-xl text-white tracking-tight">
                     {escrow.title || `Milestone Engagement #${escrow.id}`}
                   </h3>
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     {escrow.status}
                   </span>
                 </div>
 
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-1.5 sm:gap-2">
                   <span className="text-xs font-semibold text-zinc-400 font-mono uppercase">Locked:</span>
-                  <span className="text-2xl font-extrabold text-amber-400 font-mono tracking-tight">
+                  <span className="text-xl sm:text-2xl font-extrabold text-amber-400 font-mono tracking-tight">
                     ${formatStellarAmount(escrow.totalAmount)}
                   </span>
                   <span className="text-xs font-semibold text-zinc-400 font-mono">USDC</span>
@@ -83,29 +83,29 @@ export function EscrowList({ escrows }: EscrowListProps) {
               </div>
 
               {/* Single Inline Participant Bar (Minimalist) */}
-              <div className="p-3 rounded-xl bg-[#1A1A22] border border-zinc-800/80 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+              <div className="p-3 rounded-xl bg-[#1A1A22] border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 text-xs font-mono">
                 <div className="flex items-center gap-2">
-                  <User size={15} weight="duotone" className="text-purple-400" />
+                  <User size={15} weight="duotone" className="text-purple-400 shrink-0" />
                   <span className="text-zinc-400">Client:</span>
-                  <span className="text-white font-bold">{shortenAddress(escrow.depositor)}</span>
+                  <span className="text-white font-bold break-all">{shortenAddress(escrow.depositor)}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <User size={15} weight="duotone" className="text-amber-400" />
+                  <User size={15} weight="duotone" className="text-amber-400 shrink-0" />
                   <span className="text-zinc-400">Contractor:</span>
-                  <span className="text-white font-bold">{shortenAddress(escrow.beneficiary)}</span>
+                  <span className="text-white font-bold break-all">{shortenAddress(escrow.beneficiary)}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={15} weight="duotone" className="text-purple-400" />
+                  <ShieldCheck size={15} weight="duotone" className="text-purple-400 shrink-0" />
                   <span className="text-zinc-400">Arbiter:</span>
-                  <span className="text-white font-bold">{shortenAddress(escrow.arbiter)}</span>
+                  <span className="text-white font-bold break-all">{shortenAddress(escrow.arbiter)}</span>
                 </div>
               </div>
 
               {/* Minimal Progress Bar */}
               <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-mono">
+                <div className="flex flex-wrap justify-between text-xs font-mono gap-1">
                   <span className="text-zinc-400">Milestone Progress</span>
                   <span className="text-purple-400 font-bold">
                     ${formatStellarAmount(escrow.releasedAmount)} / ${formatStellarAmount(escrow.totalAmount)} USDC ({percentApproved}%)
@@ -124,41 +124,41 @@ export function EscrowList({ escrows }: EscrowListProps) {
                 {escrow.milestones.map((m, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl bg-[#1A1A22] border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-500/35 transition-colors"
+                    className="p-3 sm:p-3.5 rounded-xl bg-[#1A1A22] border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-500/35 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center font-mono text-xs font-bold text-purple-300">
+                    <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
+                      <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center font-mono text-xs font-bold text-purple-300 shrink-0">
                         #{idx + 1}
                       </span>
-                      <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                         <span className="font-bold text-sm text-white">{m.title}</span>
-                        <span className="text-xs font-mono text-zinc-400 ml-3">
+                        <span className="text-xs font-mono text-zinc-400">
                           ${formatStellarAmount(m.amount)} USDC
                         </span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0">
+                      <span className="text-[11px] sm:text-xs font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
                         {m.status}
                       </span>
 
                       {(m.status === 'Pending' || m.status === 'Submitted') && (
                         <button
                           onClick={() => openModal('submit_work', escrow.id, idx)}
-                          className="px-3 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-purple-300 text-xs font-semibold flex items-center gap-1 transition-all"
+                          className="px-2.5 sm:px-3 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-purple-300 text-xs font-semibold flex items-center gap-1 transition-all"
                         >
-                          <UploadSimple size={14} weight="bold" /> Submit Proof
+                          <UploadSimple size={13} weight="bold" /> Submit Proof
                         </button>
                       )}
 
                       {m.status !== 'Approved' && m.status !== 'Resolved' && (
                         <button
                           onClick={() => approveMilestone(escrow.id, idx)}
-                          className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1 transition-all shadow-sm"
+                          className="px-2.5 sm:px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1 transition-all shadow-sm"
                         >
-                          <CheckCircle size={14} weight="bold" /> Approve Payout
+                          <CheckCircle size={13} weight="bold" /> Approve Payout
                         </button>
                       )}
 

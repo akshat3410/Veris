@@ -51,7 +51,7 @@ export default function HomePage() {
       ───────────────────────────────────────────────────────────────────── */}
       <section
         id="hero"
-        className="relative w-full min-h-screen flex items-center justify-center pt-36 pb-24 text-center overflow-hidden"
+        className="relative w-full min-h-screen flex items-center justify-center pt-28 sm:pt-36 pb-16 sm:pb-24 text-center overflow-hidden"
       >
         {/* Flow Field Canvas Background */}
         <div className="absolute inset-0 z-0">
@@ -64,32 +64,32 @@ export default function HomePage() {
         </div>
 
         {/* Hero Content Overlay */}
-        <div className="relative z-10 max-w-4xl mx-auto px-6 flex flex-col items-center">
-          <div className="reveal-text inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-8 backdrop-blur-md">
-            <Sparkle size={15} weight="fill" className="text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
-            <span>Soroban Smart Contract Engine v2.0</span>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex flex-col items-center">
+          <div className="reveal-text inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-6 sm:mb-8 backdrop-blur-md">
+            <Sparkle size={14} weight="fill" className="text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+            <span className="text-[11px] sm:text-xs">Soroban Smart Contract Engine v2.0</span>
           </div>
 
-          <h1 className="font-display reveal-text delay-100 text-5xl sm:text-7xl lg:text-8xl mb-6 text-white tracking-tight leading-[1.05]">
+          <h1 className="font-display reveal-text delay-100 text-4xl sm:text-7xl lg:text-8xl mb-5 sm:mb-6 text-white tracking-tight leading-[1.08] sm:leading-[1.05]">
             Escrow, <br />
             <span className="text-purple-400">
               designed for trust.
             </span>
           </h1>
 
-          <p className="reveal-text delay-200 text-lg sm:text-xl text-zinc-300 max-w-xl mb-10 leading-relaxed font-normal font-body">
+          <p className="reveal-text delay-200 text-base sm:text-xl text-zinc-300 max-w-xl mb-8 sm:mb-10 leading-relaxed font-normal font-body px-2">
             Non-custodial milestone settlement powered by smart contracts. Capital releases only when work is proven.
           </p>
 
-          <div className="reveal-text delay-300 flex flex-wrap items-center justify-center gap-4">
+          <div className="reveal-text delay-300 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto">
             <button
-              className="btn-gold-accent"
+              className="btn-gold-accent w-full sm:w-auto justify-center"
               onClick={() => openModal(isConnected ? 'create_escrow' : 'connect_wallet')}
             >
               Create Escrow
               <ArrowUpRight size={18} weight="bold" className="arrow" />
             </button>
-            <a href="#how" className="btn-purple-ghost" style={{ textDecoration: 'none' }}>
+            <a href="#how" className="btn-purple-ghost w-full sm:w-auto justify-center" style={{ textDecoration: 'none' }}>
               How it works ↓
             </a>
           </div>

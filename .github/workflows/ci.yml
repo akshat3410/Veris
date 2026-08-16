@@ -1,4 +1,4 @@
-name: EscrowVault CI Pipeline
+name: Veris CI Pipeline
 
 on:
   push:

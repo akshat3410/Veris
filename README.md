@@ -24,6 +24,15 @@
 
 ---
 
+## 📸 Platform & CI/CD Screenshots
+
+| Mobile Responsive Interface | GitHub Actions CI/CD Pipeline (11 Passing Tests) |
+| :---: | :---: |
+| <img src="./assets/screenshots/mobile-responsive.png" alt="Mobile Responsive UI" width="300" /> | <img src="./assets/screenshots/ci-cd-pipeline.png" alt="CI/CD Pipeline Running" width="580" /> |
+| *Fluid mobile responsive UI on Stellar Testnet* | *Automated build & 11 passing Vitest unit tests on GitHub Actions* |
+
+---
+
 ## ⚡ Key Features & Highlights
 
 - 🔒 **Non-Custodial Smart Contract Custody**: Capital is locked directly in WASM contract instance storage. Zero intermediary key handling.

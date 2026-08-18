@@ -2,6 +2,7 @@
 
 [![Stellar Testnet](https://img.shields.io/badge/Blockchain-Stellar%20Testnet-8A2BE2?style=for-the-badge&logo=stellar)](https://stellar.expert/explorer/testnet/contract/CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-veris--rho.vercel.app-000000?style=for-the-badge&logo=vercel)](https://veris-rho.vercel.app)
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/3f8_ob-XUR4)
 [![Soroban Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Soroban%20v22.0-FACC15?style=for-the-badge&logo=rust)](https://soroban.stellar.org)
 [![Next.js 15](https://img.shields.io/badge/Frontend-Next.js%2015-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
 [![Vitest Passed](https://img.shields.io/badge/Tests-11%20Passed-green?style=for-the-badge&logo=vitest)](https://vitest.dev)
@@ -11,11 +12,20 @@
 
 ---
 
+## 🎥 Video Demonstration
+
+[![Veris Walkthrough Video](https://img.youtube.com/vi/3f8_ob-XUR4/hqdefault.jpg)](https://youtu.be/3f8_ob-XUR4)
+
+> 🎬 **[Click here to watch the full Video Walkthrough on YouTube (https://youtu.be/3f8_ob-XUR4)](https://youtu.be/3f8_ob-XUR4)**
+
+---
+
 ## 🔗 Live Application & On-Chain Verification
 
 | Parameter | Details | Link |
 | :--- | :--- | :--- |
 | **Live Web App** | Production Deployment on Vercel | 🌐 [veris-rho.vercel.app](https://veris-rho.vercel.app) |
+| **Demo Video** | 1–2 Min Product Walkthrough | 🎬 [Watch on YouTube](https://youtu.be/3f8_ob-XUR4) |
 | **Network** | Stellar Testnet (`Test SDF Network ; September 2015`) | [Stellar Network Status](https://status.stellar.org) |
 | **Smart Contract ID** | `CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT` | [View Contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CB6A4VZYMV3IOT4JNYA26XWX2UBR2LISJQOTHI3Z5Y3FVQMSZDXEQJXT) |
 | **Native SAC Token ID** | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View Token on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
